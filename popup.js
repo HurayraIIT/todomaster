@@ -1,7 +1,10 @@
+const storage = browser.storage.local;
+
 class TodoManager {
   constructor() {
     this.todos = [];
     this.history = [];
+    this.settings = {};
     this.currentFilter = "all";
     this.init();
   }
@@ -14,9 +17,12 @@ class TodoManager {
 
   async loadData() {
     try {
-      const result = await browser.storage.local.get(["todos", "history"]);
+      const result = await storage.get(["todos", "history", "settings"]);
       this.todos = result.todos || [];
       this.history = result.history || [];
+      this.settings = result.settings || { theme: "light", currentFilter: "all" };
+      this.currentFilter = this.settings.currentFilter;
+      this.applyTheme();
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -24,12 +30,20 @@ class TodoManager {
 
   async saveData() {
     try {
-      await browser.storage.local.set({
+      await storage.set({
         todos: this.todos,
         history: this.history,
       });
     } catch (error) {
       console.error("Error saving data:", error);
+    }
+  }
+
+  async saveSettings() {
+    try {
+      await storage.set({ settings: this.settings });
+    } catch (error) {
+      console.error("Error saving settings:", error);
     }
   }
 
@@ -46,6 +60,8 @@ class TodoManager {
         document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
         e.target.classList.add("active");
         this.currentFilter = e.target.dataset.filter;
+        this.settings.currentFilter = this.currentFilter;
+        this.saveSettings();
         this.render();
       });
     });
@@ -57,6 +73,8 @@ class TodoManager {
     document.getElementById("historyModal").addEventListener("click", (e) => {
       if (e.target === e.currentTarget) this.hideHistory();
     });
+
+    // No theme toggle or export/import needed
   }
 
   generateId() {
@@ -129,19 +147,37 @@ class TodoManager {
   }
 
   editTodo(id) {
-    const todo = this.todos.find((t) => t.id === id);
-    if (!todo) return;
+    const todoEl = document.querySelector(`[data-id='${id}']`).closest('.todo-item');
+    const titleEl = todoEl.querySelector('.todo-title');
+    const oldTitle = this.todos.find(t => t.id === id).title;
 
-    const newTitle = prompt("Edit todo:", todo.title);
-    if (newTitle && newTitle.trim()) {
-      todo.title = newTitle.trim();
-      todo.updatedAt = new Date().toISOString();
-      this.saveData();
-      this.render();
-    }
+    titleEl.innerHTML = `<input type="text" class="edit-input" value="${this.escapeHtml(oldTitle)}">`;
+    const input = titleEl.querySelector('input');
+    input.focus();
+
+    const save = () => {
+      const newTitle = input.value.trim();
+      if (newTitle && newTitle !== oldTitle) {
+        const todo = this.todos.find(t => t.id === id);
+        todo.title = newTitle;
+        todo.updatedAt = new Date().toISOString();
+        this.saveData();
+      }
+      this.render(); // Re-render to show the updated title
+    };
+
+    input.addEventListener('blur', save);
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        save();
+      }
+    });
   }
 
   getFilteredTodos() {
+    if (this.currentFilter === "completed") {
+      return this.history;
+    }
     if (this.currentFilter === "all") return this.todos;
     return this.todos.filter((todo) => todo.status === this.currentFilter);
   }
@@ -176,9 +212,8 @@ class TodoManager {
             <button class="action-btn status-completed" data-action="completed" data-id="${todo.id}" title="Mark Complete">✅</button>
             <button class="action-btn edit-btn" data-action="edit" data-id="${todo.id}" title="Edit">✏️</button>
           `
-              : ""
+              : "<button class=\"action-btn delete-btn\" data-action=\"delete\" data-id=\"${todo.id}\" title=\"Delete\">🗑️</button>"
           }
-          <button class="action-btn delete-btn" data-action="delete" data-id="${todo.id}" title="Delete">🗑️</button>
         </div>
       </div>
       
@@ -263,6 +298,14 @@ class TodoManager {
     const todoList = document.getElementById("todoList");
     const filteredTodos = this.getFilteredTodos();
 
+    // Set active filter button
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+      btn.classList.remove("active");
+      if (btn.dataset.filter === this.currentFilter) {
+        btn.classList.add("active");
+      }
+    });
+
     if (filteredTodos.length === 0) {
       todoList.innerHTML = `
         <div class="empty-state">
@@ -280,6 +323,23 @@ class TodoManager {
 
     // Update stats
     document.getElementById("totalTasks").textContent = this.todos.length + this.history.length;
+  }
+
+  toggleTheme() {
+    const newTheme = document.body.classList.contains("dark-mode") ? "light" : "dark";
+    this.settings.theme = newTheme;
+    this.applyTheme();
+    this.saveSettings();
+  }
+
+  applyTheme() {
+    if (this.settings.theme === "dark") {
+      document.body.classList.add("dark-mode");
+      document.getElementById("themeToggleBtn").querySelector(".icon").textContent = "☀️";
+    } else {
+      document.body.classList.remove("dark-mode");
+      document.getElementById("themeToggleBtn").querySelector(".icon").textContent = "🌙";
+    }
   }
 
   showHistory() {
@@ -351,6 +411,48 @@ class TodoManager {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  exportData() {
+    const data = {
+      todos: this.todos,
+      history: this.history,
+      settings: this.settings
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type : 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'todomaster_backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (data.todos && data.history && data.settings) {
+          if (confirm("Are you sure you want to import this data? This will overwrite your current data.")) {
+            this.todos = data.todos;
+            this.history = data.history;
+            this.settings = data.settings;
+            await this.saveData();
+            await this.saveSettings();
+            this.applyTheme();
+            this.render();
+          }
+        }
+      } catch (error) {
+        console.error("Error importing data:", error);
+        alert("Invalid backup file.");
+      }
+    };
+    reader.readAsText(file);
   }
 }
 

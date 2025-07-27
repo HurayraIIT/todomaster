@@ -9,34 +9,37 @@
 <body>
   <div class="container">
     <header class="header">
-      <h1 class="logo">📝 TodoMaster</h1>
-      <div class="header-actions">
-        <button id="historyBtn" class="btn btn-secondary" title="View History">
+      <h1 class="logo">
+        <img src="icons/todo-master.png" alt="TodoMaster" class="logo-img" />
+        TodoMaster
+      </h1>
+            <div class="header-actions">
+        <button id="historyBtn" class="btn btn-icon" title="View History">
           <span class="icon">🕒</span>
         </button>
-        <button id="clearHistoryBtn" class="btn btn-danger" title="Clear History">
+        <button id="clearHistoryBtn" class="btn btn-icon btn-danger" title="Clear History">
           <span class="icon">🗑️</span>
         </button>
       </div>
     </header>
 
-    <div class="add-todo-section">
+    <section class="add-todo-section">
       <div class="input-group">
-        <input type="text" id="todoInput" placeholder="Add a new todo..." maxlength="100">
-        <button id="addBtn" class="btn btn-primary">
+        <input type="text" id="todoInput" placeholder="Add a new todo..." maxlength="100" autocomplete="off">
+        <button id="addBtn" class="btn btn-primary btn-add">
           <span class="icon">➕</span>
         </button>
       </div>
-    </div>
+    </section>
 
-    <div class="filters">
+    <nav class="filters">
       <button class="filter-btn active" data-filter="all">All</button>
       <button class="filter-btn" data-filter="pending">Pending</button>
       <button class="filter-btn" data-filter="ongoing">Ongoing</button>
       <button class="filter-btn" data-filter="completed">Completed</button>
-    </div>
+    </nav>
 
-    <div id="todoList" class="todo-list"></div>
+    <main id="todoList" class="todo-list"></main>
 
     <div id="historyModal" class="modal">
       <div class="modal-content">
@@ -50,13 +53,14 @@
       </div>
     </div>
 
-    <div class="footer">
+    <footer class="footer">
       <div class="stats">
         <span id="totalTasks">0</span> total tasks
       </div>
-    </div>
+    </footer>
   </div>
 
+  <input type="file" id="importFile" accept=".json" style="display: none;">
   <script src="popup.js"></script>
 </body>
 </html>

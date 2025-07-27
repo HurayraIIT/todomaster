@@ -71,10 +71,11 @@ TodoMaster is a modern, lightweight Firefox extension designed to provide users 
 
 #### 1. Todo Management
 **Priority:** P0 (Critical)
-- **Add Todos:** Text input with Enter key support
-- **Edit Todos:** In-line editing capability
-- **Delete Todos:** Confirmation-protected deletion
+- **Add Todos:** Text input with Enter key support (max 100 characters)
+- **Edit Todos:** In-line editing capability with clear visual feedback
+- **Delete Todos:** Confirmation-protected deletion for safety
 - **Status Management:** Pending → Ongoing → Completed workflow
+- **Optimized UI:** Wider layout (500px) for better content visibility
 
 **Acceptance Criteria:**
 - Users can add todos up to 100 characters
@@ -136,15 +137,12 @@ TodoMaster is a modern, lightweight Firefox extension designed to provide users 
 
 #### 6. Enhanced UI/UX
 **Priority:** P2 (Medium)
-- **Dark Mode:** User-configurable theme
 - **Animations:** Smooth micro-interactions
 - **Responsive Design:** Multiple screen sizes
 - **Accessibility:** Keyboard navigation support
 
-#### 7. Data Management
+#### 7. Future Enhancements
 **Priority:** P2 (Medium)
-- **Export Data:** JSON format backup
-- **Import Data:** Restore from backup
 - **Storage Optimization:** Automatic cleanup
 - **Sync Ready:** Preparation for cloud sync
 

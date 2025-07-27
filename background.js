@@ -10,7 +10,6 @@ browser.runtime.onInstalled.addListener((details) => {
       todos: [],
       history: [],
       settings: {
-        theme: "light",
         notifications: true,
       },
     });

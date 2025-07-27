@@ -1,3 +1,53 @@
+# TodoMaster
+
+## Overview
+TodoMaster is a modern, lightweight todo manager with task tracking and notes. This extension is currently designed for **Firefox only** and uses Manifest V2 APIs.
+
+## Installation (Firefox)
+1. Go to `about:debugging#/runtime/this-firefox` in Firefox.
+2. Click "Load Temporary Add-on" and select the `manifest.json` file in this folder.
+3. The TodoMaster icon will appear in your toolbar.
+
+## Features
+- Add, edit, and delete todos
+- Track status: pending, ongoing, completed
+- Add notes to each todo
+- View completed history
+
+## Troubleshooting
+
+### Popup only shows a vertical gradient bar
+- This is usually a CSS sizing issue. Make sure both `body` and `.container` use `min-width: 300px` and `min-height: 600px`, and set `height: 600px` for the popup.
+- If you see only a thin vertical bar, your popup window is too narrow. Try resizing the popup or check your browser's extension popup settings.
+- Check for JavaScript errors in the popup (right-click → Inspect → Console).
+- Ensure all required HTML elements are present in `popup.html`.
+- After changes, reload the extension in `about:debugging` and reopen the popup.
+
+### Extension doesn't appear in toolbar
+- Check if installation was successful in about:debugging
+- Try restarting Firefox
+- Ensure manifest.json is valid
+
+### Data not persisting
+- Check browser storage quota
+- Verify Firefox allows local storage
+- Try clearing extension data and reload
+
+### UI appears broken
+- Hard refresh the popup (close and reopen)
+- Check for CSS conflicts
+- Verify all files are present
+
+### Performance issues
+- Check total number of stored todos
+- Consider clearing old history
+- Restart Firefox if memory usage is high
+
+## Getting Help
+1. Check this README for solutions
+2. Look at the browser console for errors
+3. Create an issue on GitHub with details
+4. Include Firefox version and error messages
 # README.md
 
 # TodoMaster - Firefox Extension 📝
