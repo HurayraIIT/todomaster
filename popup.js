@@ -1,462 +1,459 @@
-const storage = browser.storage.local;
-
-class TodoManager {
+class TodoMaster {
   constructor() {
-    this.todos = [];
-    this.history = [];
-    this.settings = {};
+    this.tasks = [];
     this.currentFilter = "all";
+    this.editingTask = null;
     this.init();
   }
 
   async init() {
-    await this.loadData();
+    await this.loadTasks();
     this.bindEvents();
-    this.render();
+    this.renderTasks();
+    this.updateTaskCounter();
   }
 
-  async loadData() {
+  // Load tasks from Firefox storage
+  async loadTasks() {
     try {
-      const result = await storage.get(["todos", "history", "settings"]);
-      this.todos = result.todos || [];
-      this.history = result.history || [];
-      this.settings = result.settings || { theme: "light", currentFilter: "all" };
-      this.currentFilter = this.settings.currentFilter;
-      this.applyTheme();
+      const result = await browser.storage.local.get("todoTasks");
+      this.tasks = result.todoTasks || [];
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading tasks:", error);
+      this.showNotification("Error loading tasks", "error");
     }
   }
 
-  async saveData() {
+  // Save tasks to Firefox storage
+  async saveTasks() {
     try {
-      await storage.set({
-        todos: this.todos,
-        history: this.history,
-      });
+      await browser.storage.local.set({ todoTasks: this.tasks });
     } catch (error) {
-      console.error("Error saving data:", error);
+      console.error("Error saving tasks:", error);
+      this.showNotification("Error saving tasks", "error");
     }
   }
 
-  async saveSettings() {
-    try {
-      await storage.set({ settings: this.settings });
-    } catch (error) {
-      console.error("Error saving settings:", error);
-    }
-  }
-
+  // Bind event listeners
   bindEvents() {
-    // Add todo
-    document.getElementById("addBtn").addEventListener("click", () => this.addTodo());
-    document.getElementById("todoInput").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") this.addTodo();
+    // Add task form
+    document.getElementById("addTaskForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.addTask();
     });
 
-    // Filter buttons
-    document.querySelectorAll(".filter-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
-        e.target.classList.add("active");
-        this.currentFilter = e.target.dataset.filter;
-        this.settings.currentFilter = this.currentFilter;
-        this.saveSettings();
-        this.render();
-      });
-    });
+    // Filter tabs
+    document.getElementById("allTab").addEventListener("click", () => this.setFilter("all"));
+    document.getElementById("pendingTab").addEventListener("click", () => this.setFilter("pending"));
+    document.getElementById("completedTab").addEventListener("click", () => this.setFilter("completed"));
 
-    // History modal
-    document.getElementById("historyBtn").addEventListener("click", () => this.showHistory());
-    document.getElementById("clearHistoryBtn").addEventListener("click", () => this.clearHistory());
-    document.querySelector(".close-btn").addEventListener("click", () => this.hideHistory());
-    document.getElementById("historyModal").addEventListener("click", (e) => {
-      if (e.target === e.currentTarget) this.hideHistory();
-    });
+    // Header buttons
+    document.getElementById("exportBtn").addEventListener("click", () => this.exportTasks());
+    document.getElementById("importBtn").addEventListener("click", () => this.importTasks());
+    document.getElementById("clearCompletedBtn").addEventListener("click", () => this.clearCompleted());
 
-    // No theme toggle or export/import needed
+    // Import file handler
+    document.getElementById("importFile").addEventListener("change", (e) => this.handleImportFile(e));
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => this.handleKeyboard(e));
   }
 
-  generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-  }
+  // Add new task
+  async addTask() {
+    const titleInput = document.getElementById("taskTitle");
+    const notesInput = document.getElementById("taskNotes");
 
-  addTodo() {
-    const input = document.getElementById("todoInput");
-    const title = input.value.trim();
+    const title = titleInput.value.trim();
+    const notes = notesInput.value.trim();
 
-    if (!title) return;
+    if (!title) {
+      this.showNotification("Task title is required", "error");
+      titleInput.classList.add("shake");
+      setTimeout(() => titleInput.classList.remove("shake"), 600);
+      return;
+    }
 
-    const todo = {
-      id: this.generateId(),
-      title: title,
-      status: "pending",
-      notes: [],
+    const task = {
+      id: Date.now().toString(),
+      title: this.sanitizeInput(title),
+      notes: this.sanitizeInput(notes),
+      completed: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    this.todos.unshift(todo);
-    input.value = "";
-    this.saveData();
-    this.render();
+    this.tasks.unshift(task);
+    await this.saveTasks();
+
+    // Clear form
+    titleInput.value = "";
+    notesInput.value = "";
+
+    this.renderTasks();
+    this.updateTaskCounter();
+    this.showNotification("Task added successfully", "success");
   }
 
-  updateTodoStatus(id, status) {
-    const todo = this.todos.find((t) => t.id === id);
-    if (!todo) return;
-
-    const oldStatus = todo.status;
-    todo.status = status;
-    todo.updatedAt = new Date().toISOString();
-
-    // Move to history if completed
-    if (status === "completed") {
-      this.history.unshift({
-        ...todo,
-        completedAt: new Date().toISOString(),
-      });
-      this.todos = this.todos.filter((t) => t.id !== id);
-    }
-
-    this.saveData();
-    this.render();
-  }
-
-  deleteTodo(id) {
-    if (confirm("Are you sure you want to delete this todo?")) {
-      this.todos = this.todos.filter((t) => t.id !== id);
-      this.saveData();
-      this.render();
+  // Toggle task completion
+  async toggleTask(taskId) {
+    const task = this.tasks.find((t) => t.id === taskId);
+    if (task) {
+      task.completed = !task.completed;
+      task.updatedAt = new Date().toISOString();
+      await this.saveTasks();
+      this.renderTasks();
+      this.updateTaskCounter();
     }
   }
 
-  addNote(id, noteText) {
-    const todo = this.todos.find((t) => t.id === id);
-    if (!todo || !noteText.trim()) return;
+  // Delete task
+  async deleteTask(taskId) {
+    if (confirm("Are you sure you want to delete this task?")) {
+      this.tasks = this.tasks.filter((t) => t.id !== taskId);
+      await this.saveTasks();
+      this.renderTasks();
+      this.updateTaskCounter();
+      this.showNotification("Task deleted", "success");
+    }
+  }
 
-    todo.notes.push({
-      id: this.generateId(),
-      text: noteText.trim(),
-      createdAt: new Date().toISOString(),
+  // Edit task
+  editTask(taskId) {
+    const task = this.tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    this.editingTask = taskId;
+    this.renderTasks();
+  }
+
+  // Save edited task
+  async saveEdit(taskId) {
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    const titleInput = taskElement.querySelector(".edit-title");
+    const notesInput = taskElement.querySelector(".edit-notes");
+
+    const title = titleInput.value.trim();
+    const notes = notesInput.value.trim();
+
+    if (!title) {
+      this.showNotification("Task title is required", "error");
+      titleInput.focus();
+      return;
+    }
+
+    const task = this.tasks.find((t) => t.id === taskId);
+    if (task) {
+      task.title = this.sanitizeInput(title);
+      task.notes = this.sanitizeInput(notes);
+      task.updatedAt = new Date().toISOString();
+      await this.saveTasks();
+    }
+
+    this.editingTask = null;
+    this.renderTasks();
+    this.showNotification("Task updated", "success");
+  }
+
+  // Cancel edit
+  cancelEdit() {
+    this.editingTask = null;
+    this.renderTasks();
+  }
+
+  // Set filter
+  setFilter(filter) {
+    this.currentFilter = filter;
+
+    // Update tab states
+    document.querySelectorAll(".tab-button").forEach((tab) => {
+      tab.classList.remove("active");
     });
+    document.getElementById(`${filter}Tab`).classList.add("active");
 
-    todo.updatedAt = new Date().toISOString();
-    this.saveData();
-    this.render();
+    this.renderTasks();
   }
 
-  editTodo(id) {
-    const todoEl = document.querySelector(`[data-id='${id}']`).closest('.todo-item');
-    const titleEl = todoEl.querySelector('.todo-title');
-    const oldTitle = this.todos.find(t => t.id === id).title;
+  // Render tasks
+  renderTasks() {
+    const taskList = document.getElementById("taskList");
+    const emptyState = document.getElementById("emptyState");
 
-    titleEl.innerHTML = `<input type="text" class="edit-input" value="${this.escapeHtml(oldTitle)}">`;
-    const input = titleEl.querySelector('input');
-    input.focus();
+    const filteredTasks = this.getFilteredTasks();
 
-    const save = () => {
-      const newTitle = input.value.trim();
-      if (newTitle && newTitle !== oldTitle) {
-        const todo = this.todos.find(t => t.id === id);
-        todo.title = newTitle;
-        todo.updatedAt = new Date().toISOString();
-        this.saveData();
-      }
-      this.render(); // Re-render to show the updated title
-    };
+    if (filteredTasks.length === 0) {
+      emptyState.style.display = "block";
+      // Remove existing task elements
+      const existingTasks = taskList.querySelectorAll(".task-item");
+      existingTasks.forEach((task) => task.remove());
+      return;
+    }
 
-    input.addEventListener('blur', save);
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        save();
-      }
+    emptyState.style.display = "none";
+
+    // Clear existing tasks
+    const existingTasks = taskList.querySelectorAll(".task-item");
+    existingTasks.forEach((task) => task.remove());
+
+    // Render filtered tasks
+    filteredTasks.forEach((task) => {
+      const taskElement = this.createTaskElement(task);
+      taskList.appendChild(taskElement);
     });
   }
 
-  getFilteredTodos() {
-    if (this.currentFilter === "completed") {
-      return this.history;
-    }
-    if (this.currentFilter === "all") return this.todos;
-    return this.todos.filter((todo) => todo.status === this.currentFilter);
-  }
-
-  formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
-  createTodoElement(todo) {
-    const todoEl = document.createElement("div");
-    todoEl.className = "todo-item";
-    todoEl.innerHTML = `
-      <div class="todo-header">
-        <div class="todo-content">
-          <div class="todo-title">${this.escapeHtml(todo.title)}</div>
-          <div class="todo-meta">
-            <span class="status ${todo.status}">${todo.status}</span>
-            <span style="margin-left: 8px;">Created ${this.formatDate(todo.createdAt)}</span>
-          </div>
-        </div>
-        <div class="todo-actions">
-          ${
-            todo.status !== "completed"
-              ? `
-            <button class="action-btn status-pending" data-action="pending" data-id="${todo.id}" title="Mark Pending">⏸️</button>
-            <button class="action-btn status-ongoing" data-action="ongoing" data-id="${todo.id}" title="Mark Ongoing">▶️</button>
-            <button class="action-btn status-completed" data-action="completed" data-id="${todo.id}" title="Mark Complete">✅</button>
-            <button class="action-btn edit-btn" data-action="edit" data-id="${todo.id}" title="Edit">✏️</button>
-          `
-              : "<button class=\"action-btn delete-btn\" data-action=\"delete\" data-id=\"${todo.id}\" title=\"Delete\">🗑️</button>"
-          }
-        </div>
-      </div>
-      
-      <div class="notes-section">
-        <div class="notes-header">
-          <div class="notes-title">Notes (${todo.notes.length})</div>
-          <button class="action-btn add-note-btn" data-action="add-note" data-id="${todo.id}">+ Note</button>
-        </div>
-        <div class="notes-list">
-          ${todo.notes
-            .map(
-              (note) => `
-            <div class="note-item">
-              <div>${this.escapeHtml(note.text)}</div>
-              <small style="color: #888;">${this.formatDate(note.createdAt)}</small>
-            </div>
-          `
-            )
-            .join("")}
-        </div>
-        <textarea class="note-input" placeholder="Add a note..." data-todo-id="${
-          todo.id
-        }" style="display: none;"></textarea>
-      </div>
-    `;
-
-    // Bind action events
-    todoEl.addEventListener("click", (e) => {
-      const action = e.target.dataset.action;
-      const todoId = e.target.dataset.id;
-
-      switch (action) {
-        case "pending":
-        case "ongoing":
-        case "completed":
-          this.updateTodoStatus(todoId, action);
-          break;
-        case "edit":
-          this.editTodo(todoId);
-          break;
-        case "delete":
-          this.deleteTodo(todoId);
-          break;
-        case "add-note":
-          this.toggleNoteInput(todoId);
-          break;
-      }
-    });
-
-    return todoEl;
-  }
-
-  toggleNoteInput(todoId) {
-    const noteInput = document.querySelector(`textarea[data-todo-id="${todoId}"]`);
-    if (!noteInput) return;
-
-    if (noteInput.style.display === "none") {
-      noteInput.style.display = "block";
-      noteInput.focus();
-
-      const addNote = () => {
-        if (noteInput.value.trim()) {
-          this.addNote(todoId, noteInput.value.trim());
-          noteInput.value = "";
-        }
-        noteInput.style.display = "none";
-      };
-
-      noteInput.onblur = addNote;
-      noteInput.onkeypress = (e) => {
-        if (e.key === "Enter" && e.ctrlKey) {
-          e.preventDefault();
-          addNote();
-        }
-      };
-    } else {
-      noteInput.style.display = "none";
-    }
-  }
-
-  render() {
-    const todoList = document.getElementById("todoList");
-    const filteredTodos = this.getFilteredTodos();
-
-    // Set active filter button
-    document.querySelectorAll(".filter-btn").forEach(btn => {
-      btn.classList.remove("active");
-      if (btn.dataset.filter === this.currentFilter) {
-        btn.classList.add("active");
-      }
-    });
-
-    if (filteredTodos.length === 0) {
-      todoList.innerHTML = `
-        <div class="empty-state">
-          <span class="icon">📝</span>
-          <div>No todos found</div>
-          <small>Add a new todo to get started!</small>
-        </div>
-      `;
-    } else {
-      todoList.innerHTML = "";
-      filteredTodos.forEach((todo) => {
-        todoList.appendChild(this.createTodoElement(todo));
-      });
-    }
-
-    // Update stats
-    document.getElementById("totalTasks").textContent = this.todos.length + this.history.length;
-  }
-
-  toggleTheme() {
-    const newTheme = document.body.classList.contains("dark-mode") ? "light" : "dark";
-    this.settings.theme = newTheme;
-    this.applyTheme();
-    this.saveSettings();
-  }
-
-  applyTheme() {
-    if (this.settings.theme === "dark") {
-      document.body.classList.add("dark-mode");
-      document.getElementById("themeToggleBtn").querySelector(".icon").textContent = "☀️";
-    } else {
-      document.body.classList.remove("dark-mode");
-      document.getElementById("themeToggleBtn").querySelector(".icon").textContent = "🌙";
-    }
-  }
-
-  showHistory() {
-    const modal = document.getElementById("historyModal");
-    const historyList = document.getElementById("historyList");
-
-    if (this.history.length === 0) {
-      historyList.innerHTML = `
-        <div class="empty-state">
-          <span class="icon">🕒</span>
-          <div>No completed tasks</div>
-        </div>
-      `;
-    } else {
-      historyList.innerHTML = this.history
-        .map(
-          (task) => `
-        <div class="todo-item">
-          <div class="todo-header">
-            <div class="todo-content">
-              <div class="todo-title">${this.escapeHtml(task.title)}</div>
-              <div class="todo-meta">
-                <span class="status completed">completed</span>
-                <span style="margin-left: 8px;">Completed ${this.formatDate(task.completedAt)}</span>
-              </div>
-            </div>
-          </div>
-          ${
-            task.notes.length > 0
-              ? `
-            <div class="notes-section">
-              <div class="notes-title">Notes (${task.notes.length})</div>
-              <div class="notes-list">
-                ${task.notes
-                  .map(
-                    (note) => `
-                  <div class="note-item">${this.escapeHtml(note.text)}</div>
-                `
-                  )
-                  .join("")}
-              </div>
-            </div>
-          `
-              : ""
-          }
-        </div>
-      `
-        )
-        .join("");
-    }
-
-    modal.style.display = "block";
-  }
-
-  hideHistory() {
-    document.getElementById("historyModal").style.display = "none";
-  }
-
-  async clearHistory() {
-    if (confirm("Are you sure you want to clear all history? This action cannot be undone.")) {
-      this.history = [];
-      await this.saveData();
-      this.hideHistory();
-      this.render();
-    }
-  }
-
-  escapeHtml(text) {
+  // Create task element
+  createTaskElement(task) {
     const div = document.createElement("div");
-    div.textContent = text;
+    div.className = `task-item ${task.completed ? "task-completed" : ""} fade-in`;
+    div.setAttribute("data-task-id", task.id);
+    div.setAttribute("tabindex", "0");
+
+    if (this.editingTask === task.id) {
+      div.innerHTML = this.getEditTaskHTML(task);
+    } else {
+      div.innerHTML = this.getTaskHTML(task);
+    }
+
+    this.bindTaskEvents(div, task);
+    return div;
+  }
+
+  // Get task HTML
+  getTaskHTML(task) {
+    return `
+            <div class="task-content">
+                <input type="checkbox" ${task.completed ? "checked" : ""} 
+                       class="custom-checkbox task-checkbox" 
+                       data-task-id="${task.id}">
+                <div class="task-main">
+                    <h3 class="task-title">${task.title}</h3>
+                    ${task.notes ? `<p class="task-notes">${task.notes}</p>` : ""}
+                    <p class="task-meta">
+                        Created: ${new Date(task.createdAt).toLocaleString()}
+                    </p>
+                </div>
+                <div class="task-actions">
+                    <button class="task-btn edit-btn" data-task-id="${task.id}" title="Edit task">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+                        </svg>
+                    </button>
+                    <button class="task-btn delete-btn" data-task-id="${task.id}" title="Delete task">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd"></path>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 10-2 0v4a1 1 0 002 0V7z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+  }
+
+  // Get edit task HTML
+  getEditTaskHTML(task) {
+    return `
+            <div class="edit-mode">
+                <input type="text" value="${task.title}" 
+                       class="edit-title"
+                       maxlength="200">
+                <textarea class="edit-notes"
+                          rows="2" maxlength="500">${task.notes}</textarea>
+                <div class="edit-actions">
+                    <button class="btn-save save-btn">Save</button>
+                    <button class="btn-cancel cancel-btn">Cancel</button>
+                </div>
+            </div>
+        `;
+  }
+
+  // Bind task-specific events
+  bindTaskEvents(element, task) {
+    // Checkbox toggle
+    const checkbox = element.querySelector(".task-checkbox");
+    if (checkbox) {
+      checkbox.addEventListener("change", () => this.toggleTask(task.id));
+    }
+
+    // Edit button
+    const editBtn = element.querySelector(".edit-btn");
+    if (editBtn) {
+      editBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.editTask(task.id);
+      });
+    }
+
+    // Delete button
+    const deleteBtn = element.querySelector(".delete-btn");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.deleteTask(task.id);
+      });
+    }
+
+    // Save edit button
+    const saveBtn = element.querySelector(".save-btn");
+    if (saveBtn) {
+      saveBtn.addEventListener("click", () => this.saveEdit(task.id));
+    }
+
+    // Cancel edit button
+    const cancelBtn = element.querySelector(".cancel-btn");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => this.cancelEdit());
+    }
+
+    // Enter key to save edit
+    const editTitle = element.querySelector(".edit-title");
+    if (editTitle) {
+      editTitle.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          this.saveEdit(task.id);
+        }
+      });
+    }
+  }
+
+  // Get filtered tasks
+  getFilteredTasks() {
+    switch (this.currentFilter) {
+      case "pending":
+        return this.tasks.filter((task) => !task.completed);
+      case "completed":
+        return this.tasks.filter((task) => task.completed);
+      default:
+        return this.tasks;
+    }
+  }
+
+  // Update task counter
+  updateTaskCounter() {
+    const pendingCount = this.tasks.filter((task) => !task.completed).length;
+    document.getElementById("taskCounter").textContent = pendingCount;
+  }
+
+  // Export tasks
+  exportTasks() {
+    try {
+      const dataStr = JSON.stringify(this.tasks, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `todomaster-backup-${new Date().toISOString().split("T")[0]}.json`;
+      link.click();
+
+      URL.revokeObjectURL(url);
+      this.showNotification("Tasks exported successfully", "success");
+    } catch (error) {
+      console.error("Export error:", error);
+      this.showNotification("Error exporting tasks", "error");
+    }
+  }
+
+  // Import tasks
+  importTasks() {
+    document.getElementById("importFile").click();
+  }
+
+  // Handle import file
+  async handleImportFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const importedTasks = JSON.parse(text);
+
+      if (!Array.isArray(importedTasks)) {
+        throw new Error("Invalid file format");
+      }
+
+      // Validate task structure
+      const validTasks = importedTasks.filter((task) => task.id && task.title && typeof task.completed === "boolean");
+
+      if (validTasks.length === 0) {
+        throw new Error("No valid tasks found");
+      }
+
+      // Merge with existing tasks (avoid duplicates)
+      const existingIds = new Set(this.tasks.map((t) => t.id));
+      const newTasks = validTasks.filter((task) => !existingIds.has(task.id));
+
+      this.tasks = [...this.tasks, ...newTasks];
+      await this.saveTasks();
+
+      this.renderTasks();
+      this.updateTaskCounter();
+      this.showNotification(`Imported ${newTasks.length} tasks`, "success");
+    } catch (error) {
+      console.error("Import error:", error);
+      this.showNotification("Error importing tasks. Please check file format.", "error");
+    }
+
+    // Reset file input
+    event.target.value = "";
+  }
+
+  // Clear completed tasks
+  async clearCompleted() {
+    const completedCount = this.tasks.filter((task) => task.completed).length;
+
+    if (completedCount === 0) {
+      this.showNotification("No completed tasks to clear", "error");
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete ${completedCount} completed task(s)?`)) {
+      this.tasks = this.tasks.filter((task) => !task.completed);
+      await this.saveTasks();
+      this.renderTasks();
+      this.updateTaskCounter();
+      this.showNotification(`Cleared ${completedCount} completed tasks`, "success");
+    }
+  }
+
+  // Handle keyboard shortcuts
+  handleKeyboard(event) {
+    // Ctrl/Cmd + Enter to add task when focus is on title input
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      const titleInput = document.getElementById("taskTitle");
+      if (document.activeElement === titleInput) {
+        event.preventDefault();
+        this.addTask();
+      }
+    }
+
+    // Escape to cancel edit
+    if (event.key === "Escape" && this.editingTask) {
+      this.cancelEdit();
+    }
+  }
+
+  // Sanitize input to prevent XSS
+  sanitizeInput(input) {
+    const div = document.createElement("div");
+    div.textContent = input;
     return div.innerHTML;
   }
 
-  exportData() {
-    const data = {
-      todos: this.todos,
-      history: this.history,
-      settings: this.settings
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type : 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'todomaster_backup.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  // Show notification
+  showNotification(message, type = "success") {
+    const notification = document.createElement("div");
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
 
-  importData(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const data = JSON.parse(event.target.result);
-        if (data.todos && data.history && data.settings) {
-          if (confirm("Are you sure you want to import this data? This will overwrite your current data.")) {
-            this.todos = data.todos;
-            this.history = data.history;
-            this.settings = data.settings;
-            await this.saveData();
-            await this.saveSettings();
-            this.applyTheme();
-            this.render();
-          }
-        }
-      } catch (error) {
-        console.error("Error importing data:", error);
-        alert("Invalid backup file.");
-      }
-    };
-    reader.readAsText(file);
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
   }
 }
 
-// Initialize the app
+// Initialize the app when the DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
-  new TodoManager();
+  new TodoMaster();
 });

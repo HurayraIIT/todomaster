@@ -1,66 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TodoMaster</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoMaster</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <div class="container">
+<body class="todo-container">
+    <!-- Header -->
     <header class="header">
-      <h1 class="logo">
-        <img src="icons/todo-master.png" alt="TodoMaster" class="logo-img" />
-        TodoMaster
-      </h1>
-            <div class="header-actions">
-        <button id="historyBtn" class="btn btn-icon" title="View History">
-          <span class="icon">🕒</span>
-        </button>
-        <button id="clearHistoryBtn" class="btn btn-icon btn-danger" title="Clear History">
-          <span class="icon">🗑️</span>
-        </button>
-      </div>
+        <div class="header-content">
+            <h1 class="header-title">TodoMaster</h1>
+            <span id="taskCounter" class="task-counter">0</span>
+        </div>
+        <div class="header-actions">
+            <button id="exportBtn" class="icon-btn" title="Export Tasks">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+            <button id="importBtn" class="icon-btn" title="Import Tasks">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 11-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+            <button id="clearCompletedBtn" class="icon-btn" title="Clear Completed">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 10-2 0v4a1 1 0 002 0V7z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
     </header>
 
-    <section class="add-todo-section">
-      <div class="input-group">
-        <input type="text" id="todoInput" placeholder="Add a new todo..." maxlength="100" autocomplete="off">
-        <button id="addBtn" class="btn btn-primary btn-add">
-          <span class="icon">➕</span>
-        </button>
-      </div>
-    </section>
-
-    <nav class="filters">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="pending">Pending</button>
-      <button class="filter-btn" data-filter="ongoing">Ongoing</button>
-      <button class="filter-btn" data-filter="completed">Completed</button>
-    </nav>
-
-    <main id="todoList" class="todo-list"></main>
-
-    <div id="historyModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Task History</h2>
-          <button class="close-btn">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div id="historyList"></div>
-        </div>
-      </div>
+    <!-- Add Task Form -->
+    <div class="form-container">
+        <form id="addTaskForm" class="task-form">
+            <div class="form-group">
+                <input 
+                    type="text" 
+                    id="taskTitle" 
+                    placeholder="Add a new task..." 
+                    class="input-field"
+                    maxlength="200"
+                    required
+                >
+            </div>
+            <div class="form-group">
+                <textarea 
+                    id="taskNotes" 
+                    placeholder="Add notes (optional)" 
+                    class="textarea-field"
+                    rows="2"
+                    maxlength="500"
+                ></textarea>
+            </div>
+            <button type="submit" class="btn-primary">
+                Add Task
+            </button>
+        </form>
     </div>
 
-    <footer class="footer">
-      <div class="stats">
-        <span id="totalTasks">0</span> total tasks
-      </div>
-    </footer>
-  </div>
+    <!-- Filter Tabs -->
+    <div class="tabs-container">
+        <nav class="tabs">
+            <button id="allTab" class="tab-button active">All</button>
+            <button id="pendingTab" class="tab-button">Pending</button>
+            <button id="completedTab" class="tab-button">Completed</button>
+        </nav>
+    </div>
 
-  <input type="file" id="importFile" accept=".json" style="display: none;">
-  <script src="popup.js"></script>
+    <!-- Task List -->
+    <div id="taskList" class="task-list">
+        <!-- Empty state -->
+        <div id="emptyState" class="empty-state">
+            <svg class="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <p class="empty-text">No tasks yet. Add one above!</p>
+        </div>
+    </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="importFile" accept=".json" style="display: none;">
+
+    <script src="popup.js"></script>
 </body>
 </html>
