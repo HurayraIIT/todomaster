@@ -93,16 +93,24 @@ Tasks are stored locally with the following structure:
 - **Secure Input**: XSS protection and input sanitization
 - **No Tracking**: Zero analytics or user tracking
 
-## 🎨 Screenshots
+## 🎨 Screenshots & Demo
+
+<img src="icons/todo-master.png" alt="TodoMaster Icon" width="128" height="128" align="center">
 
 ### Main Interface
-![Main Interface](docs/screenshot-main.png)
+Empty state:
+![Main Interface - Empty](screenshots/00-main-interface-empty.png)
+
+With tasks:
+![Main Interface - With Tasks](screenshots/01-main-interface-with-data.png)
 
 ### Search Functionality
-![Search](docs/screenshot-search.png)
+![Search Feature](screenshots/02-main-interface-search-feature.png)
 
-### Task Management
-![Task Management](docs/screenshot-tasks.png)
+### Live Demo
+![TodoMaster Demo](screenshots/03-demo.gif)
+
+Watch our full demo video [here](screenshots/04-demo.mp4)
 
 ## 📁 File Structure
 
