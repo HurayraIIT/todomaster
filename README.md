@@ -8,23 +8,23 @@ A modern, lightweight todo manager Firefox extension with privacy-focused local 
 
 ## 🎨 Screenshots & Demo
 
-<img src="icons/todo-master.png" alt="TodoMaster Icon" width="128" height="128" align="center">
+<img src="icons/icon-128.png" alt="TodoMaster Icon" width="128" height="128" align="center">
 
 ### Main Interface
 
 #### Live Demo
-![TodoMaster Demo](screenshots/03-demo.gif)
+![TodoMaster Demo](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/03-demo.gif)
 
 #### Empty state:
-![Main Interface - Empty](screenshots/00-main-interface-empty.png)
+![Main Interface - Empty](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/00-main-interface-empty.png)
 
 #### With tasks:
-![Main Interface - With Tasks](screenshots/01-main-interface-with-data.png)
+![Main Interface - With Tasks](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/01-main-interface-with-data.png)
 
 #### Search Functionality
-![Search Feature](screenshots/02-main-interface-search-feature.png)
+![Search Feature](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/02-main-interface-search-feature.png)
 
-Watch our full demo video [here](screenshots/04-demo.mp4)
+Watch our full demo video [here](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/04-demo.mp4)
 
 ## ✨ Features
 
@@ -44,13 +44,11 @@ Watch our full demo video [here](screenshots/04-demo.mp4)
 - **🔐 Privacy First**: All data stored locally, no cloud dependencies
 - **🎯 Instant Actions**: Quick status changes and in-place editing
 
-## 🚀 Installation
-
-1. Download the latest release or clone this repository
-2. Open Firefox and go to `about:debugging`
-3. Click "This Firefox" → "Load Temporary Add-on"
-4. Select the `manifest.json` file
-5. The TodoMaster icon will appear in your toolbar
+## 🚀 Manual Installation
+1. Go to [about:debugging](about:debugging)
+2. Click "This Firefox"
+3. Click "Load Temporary Add-on"
+4. Choose the `manifest.json` file
 
 ## 📖 Usage
 
