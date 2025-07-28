@@ -6,23 +6,6 @@ A modern, lightweight todo manager Firefox extension with privacy-focused local 
 ![Firefox](https://img.shields.io/badge/Firefox-88%2B-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-## ✨ Features
-
-### Core Functionality
-- **📝 Smart Task Management**: Create, edit, and delete tasks with ease
-- **🔄 Three Status System**: Todo → Ongoing → Done workflow
-- **🔍 Powerful Search**: Search through task titles and notes instantly
-- **📅 Date Tracking**: GMT+6 timezone support with creation/update timestamps
-- **💾 Persistent Storage**: Data survives browser restarts and updates
-- **🎨 Modern Design**: Clean, responsive interface built with modern CSS
-
-### Advanced Features
-- **⚡ Smart Sorting**: Automatically prioritizes ongoing tasks, moves completed to bottom
-- **📊 Live Counters**: Real-time task count by status
-- **📤 Export/Import**: Backup and restore your tasks in JSON format
-- **⌨️ Keyboard Shortcuts**: Efficient navigation and task management
-- **🔐 Privacy First**: All data stored locally, no cloud dependencies
-- **🎯 Instant Actions**: Quick status changes and in-place editing
 ## 🎨 Screenshots & Demo
 
 <img src="icons/todo-master.png" alt="TodoMaster Icon" width="128" height="128" align="center">
@@ -42,6 +25,24 @@ A modern, lightweight todo manager Firefox extension with privacy-focused local 
 ![Search Feature](screenshots/02-main-interface-search-feature.png)
 
 Watch our full demo video [here](screenshots/04-demo.mp4)
+
+## ✨ Features
+
+### Core Functionality
+- **📝 Smart Task Management**: Create, edit, and delete tasks with ease
+- **🔄 Three Status System**: Todo → Ongoing → Done workflow
+- **🔍 Powerful Search**: Search through task titles and notes instantly
+- **📅 Date Tracking**: GMT+6 timezone support with creation/update timestamps
+- **💾 Persistent Storage**: Data survives browser restarts and updates
+- **🎨 Modern Design**: Clean, responsive interface built with modern CSS
+
+### Advanced Features
+- **⚡ Smart Sorting**: Automatically prioritizes ongoing tasks, moves completed to bottom
+- **📊 Live Counters**: Real-time task count by status
+- **📤 Export/Import**: Backup and restore your tasks in JSON format
+- **⌨️ Keyboard Shortcuts**: Efficient navigation and task management
+- **🔐 Privacy First**: All data stored locally, no cloud dependencies
+- **🎯 Instant Actions**: Quick status changes and in-place editing
 
 ## 🚀 Installation
 
@@ -127,13 +128,13 @@ TodoMaster/
 │   ├── icon-32.png
 │   ├── icon-48.png
 │   └── icon-128.png
-├── docs/                  # Documentation assets
+├── screenshots/                  # Documentation assets
 └── README.md
 ```
 
 ## 🔄 Changelog
 
-### v1.0.0 (Current)
+### v1.1.0 (Current)
 - ✅ Three-status system (Todo/Ongoing/Done)
 - ✅ Advanced search functionality
 - ✅ GMT+6 timezone support
@@ -141,14 +142,12 @@ TodoMaster/
 - ✅ Enhanced data persistence
 - ✅ Improved responsive design
 - ✅ Live task counters
+
+### v1.0.0
 - ✅ Basic todo functionality
 - ✅ Local storage
 - ✅ Export/Import
 - ✅ Modern UI
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ### Development Setup
 1. Clone the repository
@@ -157,7 +156,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 4. Submit a pull request
 
 ### Reporting Issues
-- Use the [GitHub Issues](https://github.com/your-username/todomaster/issues) page
+- Use the [GitHub Issues](https://github.com/hurayraiit/todomaster/issues) page
 - Provide detailed steps to reproduce
 - Include browser version and extension version
 
@@ -173,12 +172,6 @@ See our [Product Requirements Document](PRD.md) for detailed future plans includ
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Icons from [Heroicons](https://heroicons.com/)
-- Design inspiration from modern task management apps
-- Firefox extension documentation and community
 
 ## 💡 Tips & Tricks
 
