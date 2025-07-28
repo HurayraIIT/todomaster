@@ -2,7 +2,7 @@
 
 A modern, lightweight todo manager Firefox extension with privacy-focused local storage and advanced task management features.
 
-![TodoMaster](https://img.shields.io/badge/version-1.1.0-blue.svg) 
+![TodoMaster](https://img.shields.io/badge/version-1.0.0-blue.svg) 
 ![Firefox](https://img.shields.io/badge/Firefox-88%2B-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
@@ -23,6 +23,25 @@ A modern, lightweight todo manager Firefox extension with privacy-focused local 
 - **⌨️ Keyboard Shortcuts**: Efficient navigation and task management
 - **🔐 Privacy First**: All data stored locally, no cloud dependencies
 - **🎯 Instant Actions**: Quick status changes and in-place editing
+## 🎨 Screenshots & Demo
+
+<img src="icons/todo-master.png" alt="TodoMaster Icon" width="128" height="128" align="center">
+
+### Main Interface
+
+#### Live Demo
+![TodoMaster Demo](screenshots/03-demo.gif)
+
+#### Empty state:
+![Main Interface - Empty](screenshots/00-main-interface-empty.png)
+
+#### With tasks:
+![Main Interface - With Tasks](screenshots/01-main-interface-with-data.png)
+
+#### Search Functionality
+![Search Feature](screenshots/02-main-interface-search-feature.png)
+
+Watch our full demo video [here](screenshots/04-demo.mp4)
 
 ## 🚀 Installation
 
@@ -40,11 +59,12 @@ A modern, lightweight todo manager Firefox extension with privacy-focused local 
 - **Edit Task**: Click the edit icon to modify title and notes
 - **Delete Task**: Click the delete icon and confirm
 - **Search**: Type in the search bar to find tasks by title or content
-
+<!-- 
 ### Keyboard Shortcuts
 - `Ctrl/Cmd + Enter`: Add new task (when title field is focused)
 - `Ctrl/Cmd + F`: Focus search bar
 - `Escape`: Cancel edit mode or clear search
+-->
 
 ### Data Management
 - **Export**: Click export icon to download tasks as JSON
@@ -93,25 +113,6 @@ Tasks are stored locally with the following structure:
 - **Secure Input**: XSS protection and input sanitization
 - **No Tracking**: Zero analytics or user tracking
 
-## 🎨 Screenshots & Demo
-
-<img src="icons/todo-master.png" alt="TodoMaster Icon" width="128" height="128" align="center">
-
-### Main Interface
-Empty state:
-![Main Interface - Empty](screenshots/00-main-interface-empty.png)
-
-With tasks:
-![Main Interface - With Tasks](screenshots/01-main-interface-with-data.png)
-
-### Search Functionality
-![Search Feature](screenshots/02-main-interface-search-feature.png)
-
-### Live Demo
-![TodoMaster Demo](screenshots/03-demo.gif)
-
-Watch our full demo video [here](screenshots/04-demo.mp4)
-
 ## 📁 File Structure
 
 ```
@@ -132,7 +133,7 @@ TodoMaster/
 
 ## 🔄 Changelog
 
-### v1.1.0 (Current)
+### v1.0.0 (Current)
 - ✅ Three-status system (Todo/Ongoing/Done)
 - ✅ Advanced search functionality
 - ✅ GMT+6 timezone support
@@ -140,8 +141,6 @@ TodoMaster/
 - ✅ Enhanced data persistence
 - ✅ Improved responsive design
 - ✅ Live task counters
-
-### v1.0.0
 - ✅ Basic todo functionality
 - ✅ Local storage
 - ✅ Export/Import
