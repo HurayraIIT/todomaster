@@ -50,6 +50,58 @@
         </div>
     </header>
 
+    <!-- Quick Add Task -->
+    <div class="quick-add-container">
+        <div class="quick-add-input">
+            <input 
+                type="text" 
+                id="quickTaskInput" 
+                placeholder="Quick add task... (Press Enter)" 
+                class="quick-input-field"
+                maxlength="200"
+            >
+            <button id="expandFormBtn" class="expand-btn" title="Add with notes">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Expanded Form (Hidden by default) -->
+    <div id="expandedForm" class="expanded-form" style="display: none;">
+        <form id="addTaskForm" class="task-form">
+            <div class="form-row">
+                <input 
+                    type="text" 
+                    id="taskTitle" 
+                    placeholder="Task title..." 
+                    class="input-field"
+                    maxlength="200"
+                    required
+                >
+                <select id="taskStatus" class="status-field">
+                    <option value="todo">Todo</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="done">Done</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <textarea 
+                    id="taskNotes" 
+                    placeholder="Add notes (optional)" 
+                    class="textarea-field compact"
+                    rows="2"
+                    maxlength="500"
+                ></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-add">Add Task</button>
+                <button type="button" id="cancelFormBtn" class="btn-cancel-form">Cancel</button>
+            </div>
+        </form>
+    </div>
+
     <!-- Search Bar -->
     <div class="search-container">
         <div class="search-box">
@@ -68,34 +120,6 @@
                 </svg>
             </button>
         </div>
-    </div>
-
-    <!-- Add Task Form -->
-    <div class="form-container">
-        <form id="addTaskForm" class="task-form">
-            <div class="form-group">
-                <input 
-                    type="text" 
-                    id="taskTitle" 
-                    placeholder="Add a new task..." 
-                    class="input-field"
-                    maxlength="200"
-                    required
-                >
-            </div>
-            <div class="form-group">
-                <textarea 
-                    id="taskNotes" 
-                    placeholder="Add notes (optional)" 
-                    class="textarea-field"
-                    rows="2"
-                    maxlength="500"
-                ></textarea>
-            </div>
-            <button type="submit" class="btn-primary">
-                Add Task
-            </button>
-        </form>
     </div>
 
     <!-- Filter Tabs -->

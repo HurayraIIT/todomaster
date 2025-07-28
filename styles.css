@@ -10,14 +10,14 @@ body {
     line-height: 1.5;
     color: #111827;
     background-color: #f9fafb;
-    min-width: 400px; /* Ensure minimum width */
-    width: 400px; /* Fixed width */
+    min-width: 400px;
+    width: 400px;
 }
 
 /* Container */
 .todo-container {
-    width: 400px !important; /* Force width */
-    min-width: 400px !important; /* Force minimum width */
+    width: 400px !important;
+    min-width: 400px !important;
     min-height: 400px;
     max-height: 650px;
     background-color: #f9fafb;
@@ -111,9 +111,186 @@ body {
     display: block;
 }
 
+/* Quick Add Container */
+.quick-add-container {
+    padding: 0.75rem 1rem;
+    background-color: white;
+    border-bottom: 1px solid #e5e7eb;
+    width: 100%;
+}
+
+.quick-add-input {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.quick-input-field {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.quick-input-field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.expand-btn {
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.expand-btn:hover {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.expand-btn .icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Expanded Form */
+.expanded-form {
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 200px;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+}
+
+.task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.form-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.input-field {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.status-field {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    background-color: white;
+    cursor: pointer;
+    min-width: 90px;
+    flex-shrink: 0;
+}
+
+.textarea-field {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    resize: none;
+    background-color: white;
+}
+
+.textarea-field.compact {
+    min-height: 60px;
+}
+
+.input-field:focus,
+.textarea-field:focus,
+.status-field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-add {
+    flex: 1;
+    background-color: #2563eb;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.btn-add:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-cancel-form {
+    background-color: #6b7280;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-cancel-form:hover {
+    background-color: #4b5563;
+}
+
 /* Search Container */
 .search-container {
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     background-color: white;
     border-bottom: 1px solid #e5e7eb;
     width: 100%;
@@ -138,7 +315,7 @@ body {
 
 .search-input {
     width: 100%;
-    padding: 0.75rem 2.5rem 0.75rem 2.5rem;
+    padding: 0.5rem 2rem 0.5rem 2.5rem;
     border: 1px solid #d1d5db;
     border-radius: 0.375rem;
     font-size: 0.875rem;
@@ -177,67 +354,6 @@ body {
     height: 1rem;
 }
 
-/* Form */
-.form-container {
-    padding: 1rem;
-    background-color: white;
-    border-bottom: 1px solid #e5e7eb;
-    width: 100%;
-}
-
-.task-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.input-field,
-.textarea-field {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-    resize: none;
-    background-color: white;
-}
-
-.input-field:focus,
-.textarea-field:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.btn-primary {
-    width: 100%;
-    background-color: #2563eb;
-    color: white;
-    padding: 0.75rem 1rem;
-    border: none;
-    border-radius: 0.375rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-primary:hover {
-    background-color: #1d4ed8;
-}
-
-.btn-primary:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
-}
-
 /* Tabs */
 .tabs-container {
     background-color: white;
@@ -252,7 +368,7 @@ body {
 
 .tab-button {
     flex: 1;
-    padding: 0.75rem 1rem;
+    padding: 0.625rem 1rem;
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
@@ -277,7 +393,7 @@ body {
 /* Task List */
 .task-list {
     padding: 1rem;
-    max-height: 320px;
+    max-height: 380px; /* Increased from 320px */
     overflow-y: auto;
     display: flex;
     flex-direction: column;

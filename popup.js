@@ -39,12 +39,33 @@ class TodoMaster {
     }
   }
 
-  // Bind event listeners
+  // Add these methods to the TodoMaster class
+
+  // Updated bindEvents method - replace the existing one
   bindEvents() {
-    // Add task form
+    // Quick add functionality
+    const quickInput = document.getElementById("quickTaskInput");
+    quickInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this.quickAddTask();
+      }
+    });
+
+    // Expand form button
+    document.getElementById("expandFormBtn").addEventListener("click", () => {
+      this.showExpandedForm();
+    });
+
+    // Cancel form button
+    document.getElementById("cancelFormBtn").addEventListener("click", () => {
+      this.hideExpandedForm();
+    });
+
+    // Add task form (expanded)
     document.getElementById("addTaskForm").addEventListener("submit", (e) => {
       e.preventDefault();
-      this.addTask();
+      this.addTaskFromForm();
     });
 
     // Filter tabs
@@ -71,6 +92,145 @@ class TodoMaster {
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => this.handleKeyboard(e));
   }
+
+  // Quick add task from the compact input
+  async quickAddTask() {
+    const quickInput = document.getElementById("quickTaskInput");
+    const title = quickInput.value.trim();
+
+    if (!title) {
+      this.showNotification("Task title is required", "error");
+      quickInput.classList.add("shake");
+      setTimeout(() => quickInput.classList.remove("shake"), 600);
+      return;
+    }
+
+    const task = {
+      id: Date.now().toString(),
+      title: this.sanitizeInput(title),
+      notes: "",
+      status: "todo", // Default status for quick add
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.tasks.unshift(task);
+    await this.saveTasks();
+
+    // Clear input
+    quickInput.value = "";
+
+    this.renderTasks();
+    this.updateTaskCounters();
+    this.showNotification("Task added successfully", "success");
+  }
+
+  // Show expanded form
+  showExpandedForm() {
+    const expandedForm = document.getElementById("expandedForm");
+    const quickInput = document.getElementById("quickTaskInput");
+    const taskTitleInput = document.getElementById("taskTitle");
+
+    // Pre-fill title if there's text in quick input
+    if (quickInput.value.trim()) {
+      taskTitleInput.value = quickInput.value.trim();
+      quickInput.value = "";
+    }
+
+    expandedForm.style.display = "block";
+    taskTitleInput.focus();
+  }
+
+  // Hide expanded form
+  hideExpandedForm() {
+    const expandedForm = document.getElementById("expandedForm");
+    const form = document.getElementById("addTaskForm");
+
+    expandedForm.style.display = "none";
+    form.reset();
+  }
+
+  // Add task from expanded form
+  async addTaskFromForm() {
+    const titleInput = document.getElementById("taskTitle");
+    const notesInput = document.getElementById("taskNotes");
+    const statusSelect = document.getElementById("taskStatus");
+
+    const title = titleInput.value.trim();
+    const notes = notesInput.value.trim();
+    const status = statusSelect.value;
+
+    if (!title) {
+      this.showNotification("Task title is required", "error");
+      titleInput.classList.add("shake");
+      setTimeout(() => titleInput.classList.remove("shake"), 600);
+      return;
+    }
+
+    const task = {
+      id: Date.now().toString(),
+      title: this.sanitizeInput(title),
+      notes: this.sanitizeInput(notes),
+      status: status,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.tasks.unshift(task);
+    await this.saveTasks();
+
+    // Hide form and clear inputs
+    this.hideExpandedForm();
+
+    this.renderTasks();
+    this.updateTaskCounters();
+    this.showNotification("Task added successfully", "success");
+  }
+
+  // Updated keyboard handler to include new shortcuts
+  handleKeyboard(event) {
+    // Ctrl/Cmd + Enter to add task when focus is on quick input
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      const quickInput = document.getElementById("quickTaskInput");
+      const titleInput = document.getElementById("taskTitle");
+
+      if (document.activeElement === quickInput) {
+        event.preventDefault();
+        this.quickAddTask();
+      } else if (document.activeElement === titleInput) {
+        event.preventDefault();
+        this.addTaskFromForm();
+      }
+    }
+
+    // Escape to cancel expanded form, edit, or clear search
+    if (event.key === "Escape") {
+      const expandedForm = document.getElementById("expandedForm");
+      if (expandedForm.style.display === "block") {
+        this.hideExpandedForm();
+      } else if (this.editingTask) {
+        this.cancelEdit();
+      } else if (this.searchQuery) {
+        this.clearSearch();
+      }
+    }
+
+    // Ctrl/Cmd + N to focus quick add input
+    if ((event.ctrlKey || event.metaKey) && event.key === "n") {
+      event.preventDefault();
+      document.getElementById("quickTaskInput").focus();
+    }
+
+    // Ctrl/Cmd + F to focus search
+    if ((event.ctrlKey || event.metaKey) && event.key === "f") {
+      event.preventDefault();
+      document.getElementById("searchInput").focus();
+    }
+  }
+
+  // Remove the old addTask method and replace with quickAddTask and addTaskFromForm
+  // The rest of your existing methods remain the same
+
 
   // Add new task
   async addTask() {
