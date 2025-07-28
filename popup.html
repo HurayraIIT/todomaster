@@ -5,13 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TodoMaster</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Inline CSS to ensure width is set immediately */
+        body {
+            width: 400px !important;
+            min-width: 400px !important;
+            margin: 0;
+            padding: 0;
+        }
+        .todo-container {
+            width: 400px !important;
+            min-width: 400px !important;
+        }
+    </style>
 </head>
 <body class="todo-container">
     <!-- Header -->
     <header class="header">
         <div class="header-content">
             <h1 class="header-title">TodoMaster</h1>
-            <span id="taskCounter" class="task-counter">0</span>
+            <div class="task-stats">
+                <span id="todoCounter" class="task-counter todo">0</span>
+                <span id="ongoingCounter" class="task-counter ongoing">0</span>
+                <span id="doneCounter" class="task-counter done">0</span>
+            </div>
         </div>
         <div class="header-actions">
             <button id="exportBtn" class="icon-btn" title="Export Tasks">
@@ -24,7 +41,7 @@
                     <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 11-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                 </svg>
             </button>
-            <button id="clearCompletedBtn" class="icon-btn" title="Clear Completed">
+            <button id="clearDoneBtn" class="icon-btn" title="Clear Completed Tasks">
                 <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd"></path>
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 10-2 0v4a1 1 0 002 0V7z" clip-rule="evenodd"></path>
@@ -32,6 +49,26 @@
             </button>
         </div>
     </header>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <div class="search-box">
+            <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Search tasks..." 
+                class="search-input"
+            >
+            <button id="clearSearch" class="clear-search" style="display: none;">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
 
     <!-- Add Task Form -->
     <div class="form-container">
@@ -65,8 +102,9 @@
     <div class="tabs-container">
         <nav class="tabs">
             <button id="allTab" class="tab-button active">All</button>
-            <button id="pendingTab" class="tab-button">Pending</button>
-            <button id="completedTab" class="tab-button">Completed</button>
+            <button id="todoTab" class="tab-button">Todo</button>
+            <button id="ongoingTab" class="tab-button">Ongoing</button>
+            <button id="doneTab" class="tab-button">Done</button>
         </nav>
     </div>
 
@@ -78,6 +116,14 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
             </svg>
             <p class="empty-text">No tasks yet. Add one above!</p>
+        </div>
+        
+        <!-- Search no results -->
+        <div id="noResults" class="empty-state" style="display: none;">
+            <svg class="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <p class="empty-text">No tasks found matching your search.</p>
         </div>
     </div>
 

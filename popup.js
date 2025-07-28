@@ -3,6 +3,8 @@ class TodoMaster {
     this.tasks = [];
     this.currentFilter = "all";
     this.editingTask = null;
+    this.searchQuery = "";
+    this.timezone = "+06:00"; // GMT+6
     this.init();
   }
 
@@ -10,17 +12,19 @@ class TodoMaster {
     await this.loadTasks();
     this.bindEvents();
     this.renderTasks();
-    this.updateTaskCounter();
+    this.updateTaskCounters();
   }
 
-  // Load tasks from Firefox storage
+  // Load tasks from Firefox storage with persistence
   async loadTasks() {
     try {
       const result = await browser.storage.local.get("todoTasks");
       this.tasks = result.todoTasks || [];
+      console.log("Tasks loaded:", this.tasks.length);
     } catch (error) {
       console.error("Error loading tasks:", error);
       this.showNotification("Error loading tasks", "error");
+      this.tasks = [];
     }
   }
 
@@ -28,6 +32,7 @@ class TodoMaster {
   async saveTasks() {
     try {
       await browser.storage.local.set({ todoTasks: this.tasks });
+      console.log("Tasks saved:", this.tasks.length);
     } catch (error) {
       console.error("Error saving tasks:", error);
       this.showNotification("Error saving tasks", "error");
@@ -44,13 +49,21 @@ class TodoMaster {
 
     // Filter tabs
     document.getElementById("allTab").addEventListener("click", () => this.setFilter("all"));
-    document.getElementById("pendingTab").addEventListener("click", () => this.setFilter("pending"));
-    document.getElementById("completedTab").addEventListener("click", () => this.setFilter("completed"));
+    document.getElementById("todoTab").addEventListener("click", () => this.setFilter("todo"));
+    document.getElementById("ongoingTab").addEventListener("click", () => this.setFilter("ongoing"));
+    document.getElementById("doneTab").addEventListener("click", () => this.setFilter("done"));
 
     // Header buttons
     document.getElementById("exportBtn").addEventListener("click", () => this.exportTasks());
     document.getElementById("importBtn").addEventListener("click", () => this.importTasks());
-    document.getElementById("clearCompletedBtn").addEventListener("click", () => this.clearCompleted());
+    document.getElementById("clearDoneBtn").addEventListener("click", () => this.clearDone());
+
+    // Search functionality
+    const searchInput = document.getElementById("searchInput");
+    const clearSearch = document.getElementById("clearSearch");
+
+    searchInput.addEventListener("input", (e) => this.handleSearch(e.target.value));
+    clearSearch.addEventListener("click", () => this.clearSearch());
 
     // Import file handler
     document.getElementById("importFile").addEventListener("change", (e) => this.handleImportFile(e));
@@ -78,7 +91,7 @@ class TodoMaster {
       id: Date.now().toString(),
       title: this.sanitizeInput(title),
       notes: this.sanitizeInput(notes),
-      completed: false,
+      status: "todo", // Default status
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -91,19 +104,19 @@ class TodoMaster {
     notesInput.value = "";
 
     this.renderTasks();
-    this.updateTaskCounter();
+    this.updateTaskCounters();
     this.showNotification("Task added successfully", "success");
   }
 
-  // Toggle task completion
-  async toggleTask(taskId) {
+  // Update task status
+  async updateTaskStatus(taskId, newStatus) {
     const task = this.tasks.find((t) => t.id === taskId);
     if (task) {
-      task.completed = !task.completed;
+      task.status = newStatus;
       task.updatedAt = new Date().toISOString();
       await this.saveTasks();
       this.renderTasks();
-      this.updateTaskCounter();
+      this.updateTaskCounters();
     }
   }
 
@@ -113,7 +126,7 @@ class TodoMaster {
       this.tasks = this.tasks.filter((t) => t.id !== taskId);
       await this.saveTasks();
       this.renderTasks();
-      this.updateTaskCounter();
+      this.updateTaskCounters();
       this.showNotification("Task deleted", "success");
     }
   }
@@ -161,6 +174,28 @@ class TodoMaster {
     this.renderTasks();
   }
 
+  // Handle search
+  handleSearch(query) {
+    this.searchQuery = query.toLowerCase().trim();
+    const clearSearch = document.getElementById("clearSearch");
+
+    if (this.searchQuery) {
+      clearSearch.style.display = "block";
+    } else {
+      clearSearch.style.display = "none";
+    }
+
+    this.renderTasks();
+  }
+
+  // Clear search
+  clearSearch() {
+    document.getElementById("searchInput").value = "";
+    this.searchQuery = "";
+    document.getElementById("clearSearch").style.display = "none";
+    this.renderTasks();
+  }
+
   // Set filter
   setFilter(filter) {
     this.currentFilter = filter;
@@ -174,38 +209,60 @@ class TodoMaster {
     this.renderTasks();
   }
 
-  // Render tasks
+  // Render tasks with smart sorting
   renderTasks() {
     const taskList = document.getElementById("taskList");
     const emptyState = document.getElementById("emptyState");
+    const noResults = document.getElementById("noResults");
 
     const filteredTasks = this.getFilteredTasks();
 
+    // Hide both empty states initially
+    emptyState.style.display = "none";
+    noResults.style.display = "none";
+
     if (filteredTasks.length === 0) {
-      emptyState.style.display = "block";
+      if (this.searchQuery) {
+        noResults.style.display = "block";
+      } else {
+        emptyState.style.display = "block";
+      }
       // Remove existing task elements
       const existingTasks = taskList.querySelectorAll(".task-item");
       existingTasks.forEach((task) => task.remove());
       return;
     }
 
-    emptyState.style.display = "none";
+    // Smart sorting: ongoing first, then todo, then done at bottom (for "all" tab)
+    if (this.currentFilter === "all") {
+      filteredTasks.sort((a, b) => {
+        const statusOrder = { ongoing: 0, todo: 1, done: 2 };
+        if (statusOrder[a.status] !== statusOrder[b.status]) {
+          return statusOrder[a.status] - statusOrder[b.status];
+        }
+        // If same status, sort by updated time (newest first)
+        return new Date(b.updatedAt) - new Date(a.updatedAt);
+      });
+    } else {
+      // For specific status tabs, sort by updated time (newest first)
+      filteredTasks.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    }
 
     // Clear existing tasks
     const existingTasks = taskList.querySelectorAll(".task-item");
     existingTasks.forEach((task) => task.remove());
 
-    // Render filtered tasks
+    // Render filtered and sorted tasks
     filteredTasks.forEach((task) => {
       const taskElement = this.createTaskElement(task);
       taskList.appendChild(taskElement);
     });
   }
 
-  // Create task element
+  // Create task element with new design
   createTaskElement(task) {
     const div = document.createElement("div");
-    div.className = `task-item ${task.completed ? "task-completed" : ""} fade-in`;
+    div.className = `task-item status-${task.status} fade-in`;
     div.setAttribute("data-task-id", task.id);
     div.setAttribute("tabindex", "0");
 
@@ -219,60 +276,79 @@ class TodoMaster {
     return div;
   }
 
-  // Get task HTML
+  // Get task HTML with status badges
   getTaskHTML(task) {
+    const statusLabels = {
+      todo: "Todo",
+      ongoing: "Ongoing",
+      done: "Done",
+    };
+
+    let titleHTML = this.highlightSearchText(task.title);
+    let notesHTML = task.notes ? this.highlightSearchText(task.notes) : "";
+
     return `
-            <div class="task-content">
-                <input type="checkbox" ${task.completed ? "checked" : ""} 
-                       class="custom-checkbox task-checkbox" 
-                       data-task-id="${task.id}">
-                <div class="task-main">
-                    <h3 class="task-title">${task.title}</h3>
-                    ${task.notes ? `<p class="task-notes">${task.notes}</p>` : ""}
-                    <p class="task-meta">
-                        Created: ${new Date(task.createdAt).toLocaleString()}
-                    </p>
-                </div>
-                <div class="task-actions">
-                    <button class="task-btn edit-btn" data-task-id="${task.id}" title="Edit task">
-                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
-                        </svg>
-                    </button>
-                    <button class="task-btn delete-btn" data-task-id="${task.id}" title="Delete task">
-                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd"></path>
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 10-2 0v4a1 1 0 002 0V7z" clip-rule="evenodd"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        `;
+      <div class="task-content">
+        <div class="task-main">
+          <div class="task-header">
+            <h3 class="task-title">${titleHTML}</h3>
+            <span class="task-status-badge ${task.status}">${statusLabels[task.status]}</span>
+          </div>
+          ${task.notes ? `<p class="task-notes">${notesHTML}</p>` : ""}
+          <div class="task-meta">
+            <span>Created: ${this.formatDate(task.createdAt)}</span>
+            ${task.updatedAt !== task.createdAt ? `<span>Updated: ${this.formatDate(task.updatedAt)}</span>` : ""}
+          </div>
+        </div>
+        <div class="task-actions">
+          <select class="status-selector" data-task-id="${task.id}">
+            <option value="todo" ${task.status === "todo" ? "selected" : ""}>Todo</option>
+            <option value="ongoing" ${task.status === "ongoing" ? "selected" : ""}>Ongoing</option>
+            <option value="done" ${task.status === "done" ? "selected" : ""}>Done</option>
+          </select>
+          <div class="action-buttons">
+            <button class="task-btn edit-btn" data-task-id="${task.id}" title="Edit task">
+              <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+              </svg>
+            </button>
+            <button class="task-btn delete-btn" data-task-id="${task.id}" title="Delete task">
+              <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd"></path>
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 10-2 0v4a1 1 0 002 0V7z" clip-rule="evenodd"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   // Get edit task HTML
   getEditTaskHTML(task) {
     return `
-            <div class="edit-mode">
-                <input type="text" value="${task.title}" 
-                       class="edit-title"
-                       maxlength="200">
-                <textarea class="edit-notes"
-                          rows="2" maxlength="500">${task.notes}</textarea>
-                <div class="edit-actions">
-                    <button class="btn-save save-btn">Save</button>
-                    <button class="btn-cancel cancel-btn">Cancel</button>
-                </div>
-            </div>
-        `;
+      <div class="edit-mode">
+        <input type="text" value="${task.title}" 
+               class="edit-title"
+               maxlength="200">
+        <textarea class="edit-notes"
+                  rows="2" maxlength="500">${task.notes}</textarea>
+        <div class="edit-actions">
+          <button class="btn-save save-btn">Save</button>
+          <button class="btn-cancel cancel-btn">Cancel</button>
+        </div>
+      </div>
+    `;
   }
 
   // Bind task-specific events
   bindTaskEvents(element, task) {
-    // Checkbox toggle
-    const checkbox = element.querySelector(".task-checkbox");
-    if (checkbox) {
-      checkbox.addEventListener("change", () => this.toggleTask(task.id));
+    // Status selector
+    const statusSelector = element.querySelector(".status-selector");
+    if (statusSelector) {
+      statusSelector.addEventListener("change", (e) => {
+        this.updateTaskStatus(task.id, e.target.value);
+      });
     }
 
     // Edit button
@@ -316,28 +392,80 @@ class TodoMaster {
     }
   }
 
-  // Get filtered tasks
+  // Get filtered tasks with search
   getFilteredTasks() {
-    switch (this.currentFilter) {
-      case "pending":
-        return this.tasks.filter((task) => !task.completed);
-      case "completed":
-        return this.tasks.filter((task) => task.completed);
-      default:
-        return this.tasks;
+    let filtered = this.tasks;
+
+    // Apply status filter
+    if (this.currentFilter !== "all") {
+      filtered = filtered.filter((task) => task.status === this.currentFilter);
     }
+
+    // Apply search filter
+    if (this.searchQuery) {
+      filtered = filtered.filter((task) => {
+        const titleMatch = task.title.toLowerCase().includes(this.searchQuery);
+        const notesMatch = task.notes.toLowerCase().includes(this.searchQuery);
+        return titleMatch || notesMatch;
+      });
+    }
+
+    return filtered;
   }
 
-  // Update task counter
-  updateTaskCounter() {
-    const pendingCount = this.tasks.filter((task) => !task.completed).length;
-    document.getElementById("taskCounter").textContent = pendingCount;
+  // Highlight search text
+  highlightSearchText(text) {
+    if (!this.searchQuery) return text;
+
+    const regex = new RegExp(`(${this.escapeRegExp(this.searchQuery)})`, "gi");
+    return text.replace(regex, '<span class="search-highlight">$1</span>');
+  }
+
+  // Escape regex special characters
+  escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // Update task counters
+  updateTaskCounters() {
+    const todoCount = this.tasks.filter((task) => task.status === "todo").length;
+    const ongoingCount = this.tasks.filter((task) => task.status === "ongoing").length;
+    const doneCount = this.tasks.filter((task) => task.status === "done").length;
+
+    document.getElementById("todoCounter").textContent = todoCount;
+    document.getElementById("ongoingCounter").textContent = ongoingCount;
+    document.getElementById("doneCounter").textContent = doneCount;
+  }
+
+  // Format date to GMT+6 timezone
+  formatDate(isoString) {
+    const date = new Date(isoString);
+
+    // Convert to GMT+6
+    const offset = 6 * 60; // 6 hours in minutes
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+    const localTime = new Date(utc + offset * 60000);
+
+    const options = {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    };
+
+    return localTime.toLocaleDateString("en-US", options);
   }
 
   // Export tasks
   exportTasks() {
     try {
-      const dataStr = JSON.stringify(this.tasks, null, 2);
+      const exportData = {
+        tasks: this.tasks,
+        exportedAt: new Date().toISOString(),
+        version: "1.1.0",
+        timezone: this.timezone,
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
       const dataBlob = new Blob([dataStr], { type: "application/json" });
       const url = URL.createObjectURL(dataBlob);
 
@@ -366,14 +494,32 @@ class TodoMaster {
 
     try {
       const text = await file.text();
-      const importedTasks = JSON.parse(text);
+      const importedData = JSON.parse(text);
 
-      if (!Array.isArray(importedTasks)) {
+      // Handle both old and new format
+      let importedTasks = [];
+      if (Array.isArray(importedData)) {
+        // Old format - direct array
+        importedTasks = importedData;
+      } else if (importedData.tasks && Array.isArray(importedData.tasks)) {
+        // New format - with metadata
+        importedTasks = importedData.tasks;
+      } else {
         throw new Error("Invalid file format");
       }
 
-      // Validate task structure
-      const validTasks = importedTasks.filter((task) => task.id && task.title && typeof task.completed === "boolean");
+      // Validate and sanitize task structure
+      const validTasks = importedTasks
+        .filter((task) => {
+          return task.id && task.title && ["todo", "ongoing", "done"].includes(task.status || "todo");
+        })
+        .map((task) => ({
+          ...task,
+          status: task.status || "todo", // Default to 'todo' for old tasks
+          notes: task.notes || "",
+          createdAt: task.createdAt || new Date().toISOString(),
+          updatedAt: task.updatedAt || new Date().toISOString(),
+        }));
 
       if (validTasks.length === 0) {
         throw new Error("No valid tasks found");
@@ -387,7 +533,7 @@ class TodoMaster {
       await this.saveTasks();
 
       this.renderTasks();
-      this.updateTaskCounter();
+      this.updateTaskCounters();
       this.showNotification(`Imported ${newTasks.length} tasks`, "success");
     } catch (error) {
       console.error("Import error:", error);
@@ -399,20 +545,20 @@ class TodoMaster {
   }
 
   // Clear completed tasks
-  async clearCompleted() {
-    const completedCount = this.tasks.filter((task) => task.completed).length;
+  async clearDone() {
+    const doneCount = this.tasks.filter((task) => task.status === "done").length;
 
-    if (completedCount === 0) {
+    if (doneCount === 0) {
       this.showNotification("No completed tasks to clear", "error");
       return;
     }
 
-    if (confirm(`Are you sure you want to delete ${completedCount} completed task(s)?`)) {
-      this.tasks = this.tasks.filter((task) => !task.completed);
+    if (confirm(`Are you sure you want to delete ${doneCount} completed task(s)?`)) {
+      this.tasks = this.tasks.filter((task) => task.status !== "done");
       await this.saveTasks();
       this.renderTasks();
-      this.updateTaskCounter();
-      this.showNotification(`Cleared ${completedCount} completed tasks`, "success");
+      this.updateTaskCounters();
+      this.showNotification(`Cleared ${doneCount} completed tasks`, "success");
     }
   }
 
@@ -427,9 +573,19 @@ class TodoMaster {
       }
     }
 
-    // Escape to cancel edit
-    if (event.key === "Escape" && this.editingTask) {
-      this.cancelEdit();
+    // Escape to cancel edit or clear search
+    if (event.key === "Escape") {
+      if (this.editingTask) {
+        this.cancelEdit();
+      } else if (this.searchQuery) {
+        this.clearSearch();
+      }
+    }
+
+    // Ctrl/Cmd + F to focus search
+    if ((event.ctrlKey || event.metaKey) && event.key === "f") {
+      event.preventDefault();
+      document.getElementById("searchInput").focus();
     }
   }
 
