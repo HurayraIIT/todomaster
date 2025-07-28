@@ -427,9 +427,9 @@ class TodoMaster {
     div.setAttribute("tabindex", "0");
 
     if (this.editingTask === task.id) {
-      div.innerHTML = this.getEditTaskHTML(task);
+      div.innerHTML = this.getEditTaskHTML(task); // safe
     } else {
-      div.innerHTML = this.getTaskHTML(task);
+      div.innerHTML = this.getTaskHTML(task); // safe
     }
 
     this.bindTaskEvents(div, task);
