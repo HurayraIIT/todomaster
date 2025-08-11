@@ -31,14 +31,9 @@
             </div>
         </div>
         <div class="header-actions">
-            <button id="exportBtn" class="icon-btn" title="Export Tasks">
+            <button id="summaryBtn" class="icon-btn" title="Copy Task Summary">
                 <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-            </button>
-            <button id="importBtn" class="icon-btn" title="Import Tasks">
-                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 11-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd" d="M8 4a2 2 0 012-2h4a1 1 0 010 2h-4a1 1 0 00-1 1v1h5a2 2 0 012 2v3a2 2 0 01-2 2h-1v1a2 2 0 01-2 2H8a2 2 0 01-2-2v-1H5a2 2 0 01-2-2V8a2 2 0 012-2h5V5a2 2 0 012-2z" clip-rule="evenodd"></path>
                 </svg>
             </button>
             <button id="clearDoneBtn" class="icon-btn" title="Clear Completed Tasks">
@@ -102,26 +97,6 @@
         </form>
     </div>
 
-    <!-- Search Bar -->
-    <div class="search-container">
-        <div class="search-box">
-            <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-            <input 
-                type="text" 
-                id="searchInput" 
-                placeholder="Search tasks..." 
-                class="search-input"
-            >
-            <button id="clearSearch" class="clear-search" style="display: none;">
-                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-            </button>
-        </div>
-    </div>
-
     <!-- Filter Tabs -->
     <div class="tabs-container">
         <nav class="tabs">
@@ -150,9 +125,6 @@
             <p class="empty-text">No tasks found matching your search.</p>
         </div>
     </div>
-
-    <!-- Hidden file input for import -->
-    <input type="file" id="importFile" accept=".json" style="display: none;">
 
     <script src="popup.js"></script>
 </body>

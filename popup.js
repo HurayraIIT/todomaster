@@ -3,7 +3,6 @@ class TodoMaster {
     this.tasks = [];
     this.currentFilter = "all";
     this.editingTask = null;
-    this.searchQuery = "";
     this.timezone = "+06:00"; // GMT+6
     this.init();
   }
@@ -39,8 +38,6 @@ class TodoMaster {
     }
   }
 
-  // Add these methods to the TodoMaster class
-
   // Updated bindEvents method - replace the existing one
   bindEvents() {
     // Quick add functionality
@@ -75,19 +72,8 @@ class TodoMaster {
     document.getElementById("doneTab").addEventListener("click", () => this.setFilter("done"));
 
     // Header buttons
-    document.getElementById("exportBtn").addEventListener("click", () => this.exportTasks());
-    document.getElementById("importBtn").addEventListener("click", () => this.importTasks());
+    document.getElementById("summaryBtn").addEventListener("click", () => this.copyTaskSummary());
     document.getElementById("clearDoneBtn").addEventListener("click", () => this.clearDone());
-
-    // Search functionality
-    const searchInput = document.getElementById("searchInput");
-    const clearSearch = document.getElementById("clearSearch");
-
-    searchInput.addEventListener("input", (e) => this.handleSearch(e.target.value));
-    clearSearch.addEventListener("click", () => this.clearSearch());
-
-    // Import file handler
-    document.getElementById("importFile").addEventListener("change", (e) => this.handleImportFile(e));
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => this.handleKeyboard(e));
@@ -187,6 +173,70 @@ class TodoMaster {
     this.showNotification("Task added successfully", "success");
   }
 
+  // Escape HTML to prevent XSS
+  escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Add new method to generate and copy task summary
+  async copyTaskSummary() {
+    try {
+      const summary = this.generateTaskSummary();
+      await navigator.clipboard.writeText(summary);
+      this.showNotification("Task summary copied to clipboard", "success");
+    } catch (error) {
+      console.error("Error copying summary:", error);
+      this.showNotification("Error copying summary", "error");
+    }
+  }
+
+  // Add new method to generate task summary in markdown
+  generateTaskSummary() {
+    const date = new Date().toLocaleDateString("en-US", {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    let summary = `# Task Summary (${date})\n\n`;
+    
+    // Add statistics
+    const todoCount = this.tasks.filter(t => t.status === "todo").length;
+    const ongoingCount = this.tasks.filter(t => t.status === "ongoing").length;
+    const doneCount = this.tasks.filter(t => t.status === "done").length;
+    
+    summary += `## Statistics\n`;
+    summary += `- Total Tasks: ${this.tasks.length}\n`;
+    summary += `- Todo: ${todoCount}\n`;
+    summary += `- Ongoing: ${ongoingCount}\n`;
+    summary += `- Completed: ${doneCount}\n\n`;
+
+    // Add tasks by status
+    const statuses = ["ongoing", "todo", "done"];
+    
+    statuses.forEach(status => {
+      const statusTasks = this.tasks.filter(t => t.status === status);
+      if (statusTasks.length > 0) {
+        summary += `## ${status.charAt(0).toUpperCase() + status.slice(1)} Tasks\n\n`;
+        statusTasks.forEach(task => {
+          summary += `### ${task.title}\n`;
+          if (task.notes) {
+            summary += `${task.notes}\n`;
+          }
+          summary += `- Created: ${this.formatDate(task.createdAt)}\n`;
+          if (task.updatedAt !== task.createdAt) {
+            summary += `- Updated: ${this.formatDate(task.updatedAt)}\n`;
+          }
+          summary += '\n';
+        });
+      }
+    });
+
+    return summary;
+  }
+
   // Updated keyboard handler to include new shortcuts
   handleKeyboard(event) {
     // Ctrl/Cmd + Enter to add task when focus is on quick input
@@ -210,8 +260,6 @@ class TodoMaster {
         this.hideExpandedForm();
       } else if (this.editingTask) {
         this.cancelEdit();
-      } else if (this.searchQuery) {
-        this.clearSearch();
       }
     }
 
@@ -219,12 +267,6 @@ class TodoMaster {
     if ((event.ctrlKey || event.metaKey) && event.key === "n") {
       event.preventDefault();
       document.getElementById("quickTaskInput").focus();
-    }
-
-    // Ctrl/Cmd + F to focus search
-    if ((event.ctrlKey || event.metaKey) && event.key === "f") {
-      event.preventDefault();
-      document.getElementById("searchInput").focus();
     }
   }
 
@@ -334,28 +376,6 @@ class TodoMaster {
     this.renderTasks();
   }
 
-  // Handle search
-  handleSearch(query) {
-    this.searchQuery = query.toLowerCase().trim();
-    const clearSearch = document.getElementById("clearSearch");
-
-    if (this.searchQuery) {
-      clearSearch.style.display = "block";
-    } else {
-      clearSearch.style.display = "none";
-    }
-
-    this.renderTasks();
-  }
-
-  // Clear search
-  clearSearch() {
-    document.getElementById("searchInput").value = "";
-    this.searchQuery = "";
-    document.getElementById("clearSearch").style.display = "none";
-    this.renderTasks();
-  }
-
   // Set filter
   setFilter(filter) {
     this.currentFilter = filter;
@@ -373,20 +393,13 @@ class TodoMaster {
   renderTasks() {
     const taskList = document.getElementById("taskList");
     const emptyState = document.getElementById("emptyState");
-    const noResults = document.getElementById("noResults");
+
+    emptyState.style.display = "none";
 
     const filteredTasks = this.getFilteredTasks();
 
-    // Hide both empty states initially
-    emptyState.style.display = "none";
-    noResults.style.display = "none";
-
     if (filteredTasks.length === 0) {
-      if (this.searchQuery) {
-        noResults.style.display = "block";
-      } else {
-        emptyState.style.display = "block";
-      }
+      emptyState.style.display = "block";
       // Remove existing task elements
       const existingTasks = taskList.querySelectorAll(".task-item");
       existingTasks.forEach((task) => task.remove());
@@ -444,17 +457,14 @@ class TodoMaster {
       done: "Done",
     };
 
-    let titleHTML = this.highlightSearchText(task.title);
-    let notesHTML = task.notes ? this.highlightSearchText(task.notes) : "";
-
     return `
       <div class="task-content">
         <div class="task-main">
           <div class="task-header">
-            <h3 class="task-title">${titleHTML}</h3>
+            <h3 class="task-title">${this.escapeHTML(task.title)}</h3>
             <span class="task-status-badge ${task.status}">${statusLabels[task.status]}</span>
           </div>
-          ${task.notes ? `<p class="task-notes">${notesHTML}</p>` : ""}
+          ${task.notes ? `<p class="task-notes">${this.escapeHTML(task.notes)}</p>` : ""}
           <div class="task-meta">
             <span>Created: ${this.formatDate(task.createdAt)}</span>
             ${task.updatedAt !== task.createdAt ? `<span>Updated: ${this.formatDate(task.updatedAt)}</span>` : ""}
@@ -554,36 +564,10 @@ class TodoMaster {
 
   // Get filtered tasks with search
   getFilteredTasks() {
-    let filtered = this.tasks;
-
-    // Apply status filter
-    if (this.currentFilter !== "all") {
-      filtered = filtered.filter((task) => task.status === this.currentFilter);
+    if (this.currentFilter === "all") {
+      return this.tasks;
     }
-
-    // Apply search filter
-    if (this.searchQuery) {
-      filtered = filtered.filter((task) => {
-        const titleMatch = task.title.toLowerCase().includes(this.searchQuery);
-        const notesMatch = task.notes.toLowerCase().includes(this.searchQuery);
-        return titleMatch || notesMatch;
-      });
-    }
-
-    return filtered;
-  }
-
-  // Highlight search text
-  highlightSearchText(text) {
-    if (!this.searchQuery) return text;
-
-    const regex = new RegExp(`(${this.escapeRegExp(this.searchQuery)})`, "gi");
-    return text.replace(regex, '<span class="search-highlight">$1</span>');
-  }
-
-  // Escape regex special characters
-  escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return this.tasks.filter((task) => task.status === this.currentFilter);
   }
 
   // Update task counters
@@ -615,95 +599,6 @@ class TodoMaster {
     return localTime.toLocaleDateString("en-US", options);
   }
 
-  // Export tasks
-  exportTasks() {
-    try {
-      const exportData = {
-        tasks: this.tasks,
-        exportedAt: new Date().toISOString(),
-        version: "1.1.0",
-        timezone: this.timezone,
-      };
-
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(dataBlob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `todomaster-backup-${new Date().toISOString().split("T")[0]}.json`;
-      link.click();
-
-      URL.revokeObjectURL(url);
-      this.showNotification("Tasks exported successfully", "success");
-    } catch (error) {
-      console.error("Export error:", error);
-      this.showNotification("Error exporting tasks", "error");
-    }
-  }
-
-  // Import tasks
-  importTasks() {
-    document.getElementById("importFile").click();
-  }
-
-  // Handle import file
-  async handleImportFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const importedData = JSON.parse(text);
-
-      // Handle both old and new format
-      let importedTasks = [];
-      if (Array.isArray(importedData)) {
-        // Old format - direct array
-        importedTasks = importedData;
-      } else if (importedData.tasks && Array.isArray(importedData.tasks)) {
-        // New format - with metadata
-        importedTasks = importedData.tasks;
-      } else {
-        throw new Error("Invalid file format");
-      }
-
-      // Validate and sanitize task structure
-      const validTasks = importedTasks
-        .filter((task) => {
-          return task.id && task.title && ["todo", "ongoing", "done"].includes(task.status || "todo");
-        })
-        .map((task) => ({
-          ...task,
-          status: task.status || "todo", // Default to 'todo' for old tasks
-          notes: task.notes || "",
-          createdAt: task.createdAt || new Date().toISOString(),
-          updatedAt: task.updatedAt || new Date().toISOString(),
-        }));
-
-      if (validTasks.length === 0) {
-        throw new Error("No valid tasks found");
-      }
-
-      // Merge with existing tasks (avoid duplicates)
-      const existingIds = new Set(this.tasks.map((t) => t.id));
-      const newTasks = validTasks.filter((task) => !existingIds.has(task.id));
-
-      this.tasks = [...this.tasks, ...newTasks];
-      await this.saveTasks();
-
-      this.renderTasks();
-      this.updateTaskCounters();
-      this.showNotification(`Imported ${newTasks.length} tasks`, "success");
-    } catch (error) {
-      console.error("Import error:", error);
-      this.showNotification("Error importing tasks. Please check file format.", "error");
-    }
-
-    // Reset file input
-    event.target.value = "";
-  }
-
   // Clear completed tasks
   async clearDone() {
     const doneCount = this.tasks.filter((task) => task.status === "done").length;
@@ -719,33 +614,6 @@ class TodoMaster {
       this.renderTasks();
       this.updateTaskCounters();
       this.showNotification(`Cleared ${doneCount} completed tasks`, "success");
-    }
-  }
-
-  // Handle keyboard shortcuts
-  handleKeyboard(event) {
-    // Ctrl/Cmd + Enter to add task when focus is on title input
-    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-      const titleInput = document.getElementById("taskTitle");
-      if (document.activeElement === titleInput) {
-        event.preventDefault();
-        this.addTask();
-      }
-    }
-
-    // Escape to cancel edit or clear search
-    if (event.key === "Escape") {
-      if (this.editingTask) {
-        this.cancelEdit();
-      } else if (this.searchQuery) {
-        this.clearSearch();
-      }
-    }
-
-    // Ctrl/Cmd + F to focus search
-    if ((event.ctrlKey || event.metaKey) && event.key === "f") {
-      event.preventDefault();
-      document.getElementById("searchInput").focus();
     }
   }
 

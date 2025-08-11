@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "TodoMaster",
-  "version": "1.1.0",
-  "description": "A modern, lightweight to-do manager built for Firefox, with privacy-first local storage and advanced task features.",
+  "version": "1.2.0",
+  "description": "A modern, lightweight todo manager Firefox extension with privacy-focused local storage and efficient task management features.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
