@@ -13,18 +13,18 @@ A modern, lightweight todo manager Firefox extension with privacy-focused local 
 ### Main Interface
 
 #### Task Summary Generation
-![Task Summary Generation](screenshots/05-generate-task-summary.png)
+![Task Summary Generation](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/05-generate-task-summary.png)
 
 #### Task Filtering
-![Task Filtering](screenshots/02-task-filtering-by-status.png)
+![Task Filtering](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/02-task-filtering-by-status.png)
 
 #### With Tasks
-![Main Interface - With Tasks](screenshots/01-main-interface-with-data.png)
+![Main Interface - With Tasks](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/01-main-interface-with-data.png)
 
 #### Empty State
-![Main Interface - Empty](screenshots/00-main-interface-empty.png)
+![Main Interface - Empty](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/00-main-interface-empty.png)
 
-Watch our demo video [here](screenshots/04-demo.mp4)
+Watch our demo video [here](https://pub-8652c8e95ad6452c85f9643f88d7f8af.r2.dev/screenshots/04-demo.mp4)
 
 ## ✨ Features
 
