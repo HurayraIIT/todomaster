@@ -478,14 +478,16 @@ class TodoMaster {
           </select>
           <div class="action-buttons">
             <button class="task-btn edit-btn" data-task-id="${task.id}" title="Edit task">
-              <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+              <svg viewBox="0 0 91 91" enable-background="new 0 0 91 91" xmlns="http://www.w3.org/2000/svg" width="15" height="15">
+                <polygon fill="#6EC4A7" points="8.015,63.352 0.8,90.053 27.767,83.105 12.858,68.197 "></polygon>
+                <path d="M10.585,57.832l11.373,11.373l11.377,11.373L79.69,34.22L56.944,11.478L10.585,57.832z" fill="#647F94"></path>
+                <path d="M61.302,29.813c1.117,1.117,1.117,2.93,0,4.047L35.239,59.924c-0.559,0.559-1.291,0.838-2.023,0.838 s-1.465-0.279-2.021-0.838c-1.119-1.119-1.119-2.93,0-4.047l26.059-26.064C58.372,28.696,60.185,28.696,61.302,29.813z" fill="#95AEC2"></path>
+                <path d="M87.704,13.612L77.558,3.459c-1.68-1.683-3.918-2.608-6.299-2.608c-2.377,0-4.615,0.925-6.295,2.607 l-3.973,3.973l22.744,22.742l3.969-3.968c1.684-1.682,2.609-3.917,2.609-6.295C90.313,17.53,89.388,15.295,87.704,13.612z" fill="#95AEC2"></path>
               </svg>
             </button>
             <button class="task-btn delete-btn" data-task-id="${task.id}" title="Delete task">
-              <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd"></path>
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 10-2 0v4a1 1 0 002 0V7z" clip-rule="evenodd"></path>
+              <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="20" height="20">
+                <path d="M160 256H96a32 32 0 0 1 0-64h256V95.936a32 32 0 0 1 32-32h256a32 32 0 0 1 32 32V192h256a32 32 0 1 1 0 64h-64v672a32 32 0 0 1-32 32H192a32 32 0 0 1-32-32V256zm448-64v-64H416v64h192zM224 896h576V256H224v640zm192-128a32 32 0 0 1-32-32V416a32 32 0 0 1 64 0v320a32 32 0 0 1-32 32zm192 0a32 32 0 0 1-32-32V416a32 32 0 0 1 64 0v320a32 32 0 0 1-32 32z"></path>
               </svg>
             </button>
           </div>
