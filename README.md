@@ -2,7 +2,7 @@
 
 A modern, lightweight todo manager Firefox extension with privacy-focused local storage and efficient task management features.
 
-![TodoMaster](https://img.shields.io/badge/version-1.2.0-blue.svg) 
+![TodoMaster](https://img.shields.io/badge/version-1.3.0-blue.svg) 
 ![Firefox](https://img.shields.io/badge/Firefox-88%2B-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
@@ -127,9 +127,15 @@ TodoMaster/
 └── README.md
 ```
 
+
 ## 🔄 Changelog
 
-### v1.2.0 (Current)
+### v1.3.0 (Current)
+- 🚀 Published on [Firefox Add-ons Store](https://addons.mozilla.org/en-US/firefox/addon/todomaster/)
+- 🐞 General improvements and bug fixes
+- 📦 Updated manifest and documentation for public release
+
+### v1.2.0
 - ✨ Added task summary generation in markdown format
 - 🔄 Simplified interface by removing search functionality
 - 📤 Removed import/export in favor of task summary
@@ -137,7 +143,6 @@ TodoMaster/
 - 🐛 Fixed various bug fixes and improvements
 
 ### v1.1.0
-
 - ✅ Three-status system (Todo/Ongoing/Done)
 - ✅ Advanced search functionality
 - ✅ GMT+6 timezone support
@@ -147,7 +152,6 @@ TodoMaster/
 - ✅ Live task counters
 
 ### v1.0.0
-
 - ✅ Basic todo functionality
 - ✅ Local storage
 - ✅ Export/Import
@@ -170,4 +174,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Made with ❤️ for productivity enthusiasts who value privacy and simplicity.
 
-**Download from Firefox Add-ons Store** (Coming Soon)
+**Download from Firefox Add-ons Store:** [https://addons.mozilla.org/en-US/firefox/addon/todomaster/](https://addons.mozilla.org/en-US/firefox/addon/todomaster/)
